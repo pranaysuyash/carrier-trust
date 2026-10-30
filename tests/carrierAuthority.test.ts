@@ -162,5 +162,34 @@ describe('SAFER / L&I Authority & Contact Risk Engine', () => {
       expect(result.isDndLocked).toBe(false);
       expect(result.reasons.length).toBe(0);
     });
+
+    it('distinguishes between inviolable statutory lock and multi-factor step-up verification tier', () => {
+      // Tier 1: Inviolable statutory lockout
+      const statutoryBlocked: Partial<CarrierProfile> = {
+        operatingAuthority: 'REVOKED',
+      };
+      const statResult = evaluateAutomatedDnd(statutoryBlocked);
+      expect(statResult.isDndLocked).toBe(true);
+      expect(statResult.lockType).toBe('STATUTORY_REVOCATION');
+
+      // Tier 2: Elevated contact risk requiring out-of-band Step-Up verification
+      const elevatedContact: ContactSecurityProfile = {
+        phoneLineType: 'VOIP_VIRTUAL',
+        telecomCarrier: 'Google Voice',
+        voipRiskLevel: 'LOW',
+        emailDomain: 'apex-freight.com',
+        emailDomainType: 'CORPORATE_MATCH',
+        domainAgeDays: 60, // newly registered domain
+        ipOriginCountry: 'US',
+        ipCity: 'Chicago',
+        isVpnOrProxy: false,
+        ipGeolocationMismatch: false,
+      };
+      const contactEval = evaluateContactSecurity(elevatedContact);
+      // Score = 25 (VOIP) + 35 (Domain <90d) = 60 (HIGH, but NOT critical fraud > 70)
+      expect(contactEval.riskScore).toBe(60);
+      expect(contactEval.riskCategory).toBe('HIGH');
+      expect(contactEval.requiresManualVerification).toBe(true);
+    });
   });
 });

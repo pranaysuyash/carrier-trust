@@ -11,6 +11,7 @@ import { CarrierScoreDial } from './CarrierScoreDial';
 import { BasicPercentilesGrid } from './BasicPercentilesGrid';
 import { CoiVerificationCard } from './CoiVerificationCard';
 import { FraudRiskRadar } from './FraudRiskRadar';
+import { StepUpVerificationModal, type StepUpAuditReceipt } from './StepUpVerificationModal';
 import { SuiteDock } from './SuiteDock';
 import { useShipmentSession } from '../suite/ShipmentSession';
 import { useShipmentDraft } from '../suite/useShipmentDraft';
@@ -28,6 +29,8 @@ export function App() {
   const setSelectedDot = (carrierDot: string) => { setSelection({ carrierDot, review: reviewCarrier(carrierDot) }); setPublicationMessage(''); };
   const draft = useShipmentDraft({ value: selection, importValue: carrierForShipment, applyValue: next => { setSelection(next); setPublicationMessage(''); } });
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isStepUpOpen, setIsStepUpOpen] = useState(false);
+  const [verifiedDots, setVerifiedDots] = useState<Record<string, StepUpAuditReceipt>>({});
 
   const activeCarrier = useMemo(() => {
     return selection.review?.profile ?? null;
@@ -233,8 +236,20 @@ export function App() {
             drivers={activeCarrier.driverCount}
             contact={activeCarrier.fraudIndicators.contactSecurity}
             filings={activeCarrier.authorityFilings}
+            onInitiateStepUp={() => setIsStepUpOpen(true)}
+            stepUpVerified={Boolean(verifiedDots[activeCarrier.dotNumber])}
           />
         </div>
+
+        {/* Tier-3 Step-Up Verification Modal */}
+        <StepUpVerificationModal
+          carrier={activeCarrier}
+          isOpen={isStepUpOpen}
+          onClose={() => setIsStepUpOpen(false)}
+          onVerified={(receipt) => {
+            setVerifiedDots((prev) => ({ ...prev, [receipt.dotNumber]: receipt }));
+          }}
+        />
         </> : <section className="audit-banner blockers" role="status"><h2>Carrier identity unresolved</h2><p>DOT {selectedDot} is absent from the explicit scenario roster. No other carrier profile is substituted. Choose a listed profile to review its declared policy evidence.</p></section>}
       </main>
     </div>
