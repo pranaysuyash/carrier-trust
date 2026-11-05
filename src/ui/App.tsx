@@ -11,7 +11,9 @@ import { CarrierScoreDial } from './CarrierScoreDial';
 import { BasicPercentilesGrid } from './BasicPercentilesGrid';
 import { CoiVerificationCard } from './CoiVerificationCard';
 import { FraudRiskRadar } from './FraudRiskRadar';
+import { ChameleonNetworkRadarCanvas } from './ChameleonNetworkRadarCanvas';
 import { StepUpVerificationModal, type StepUpAuditReceipt } from './StepUpVerificationModal';
+import { DriverQualificationModal } from './DriverQualificationModal';
 import { SuiteDock } from './SuiteDock';
 import { useShipmentSession } from '../suite/ShipmentSession';
 import { useShipmentDraft } from '../suite/useShipmentDraft';
@@ -30,6 +32,7 @@ export function App() {
   const draft = useShipmentDraft({ value: selection, importValue: carrierForShipment, applyValue: next => { setSelection(next); setPublicationMessage(''); } });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isStepUpOpen, setIsStepUpOpen] = useState(false);
+  const [isDqfOpen, setIsDqfOpen] = useState(false);
   const [verifiedDots, setVerifiedDots] = useState<Record<string, StepUpAuditReceipt>>({});
 
   const activeCarrier = useMemo(() => {
@@ -186,6 +189,14 @@ export function App() {
               <a href={p03Url} target="_blank" rel="noopener noreferrer" className="btn-cross p03">
                 Audit Driver HOS (5175) ↗
               </a>
+              <button
+                type="button"
+                onClick={() => setIsDqfOpen(true)}
+                className="btn-cross p03"
+                style={{ cursor: 'pointer', textAlign: 'center', border: '1px solid rgba(56, 189, 248, 0.4)', background: '#1e293b', color: '#38bdf8' }}
+              >
+                Driver DQF &amp; Clearinghouse 🧑‍✈️
+              </button>
             </div>
           </div>
         </div>
@@ -241,6 +252,9 @@ export function App() {
           />
         </div>
 
+        {/* Chameleon Carrier Network Clusters & Cyber Fraud Nexus Radar Scope */}
+        <ChameleonNetworkRadarCanvas carrier={activeCarrier} />
+
         {/* Tier-3 Step-Up Verification Modal */}
         <StepUpVerificationModal
           carrier={activeCarrier}
@@ -249,6 +263,14 @@ export function App() {
           onVerified={(receipt) => {
             setVerifiedDots((prev) => ({ ...prev, [receipt.dotNumber]: receipt }));
           }}
+        />
+
+        {/* 49 CFR Part 391 Driver Qualification File Modal */}
+        <DriverQualificationModal
+          carrierDot={activeCarrier.dotNumber}
+          carrierName={activeCarrier.legalName}
+          isOpen={isDqfOpen}
+          onClose={() => setIsDqfOpen(false)}
         />
         </> : <section className="audit-banner blockers" role="status"><h2>Carrier identity unresolved</h2><p>DOT {selectedDot} is absent from the explicit scenario roster. No other carrier profile is substituted. Choose a listed profile to review its declared policy evidence.</p></section>}
       </main>
